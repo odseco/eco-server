@@ -1,5 +1,6 @@
 package com.gaoyoland.eco;
 
+import com.gaoyoland.eco.controller.AuthController;
 import com.gaoyoland.eco.util.UserUtil;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -42,6 +43,9 @@ public class Server implements SparkApplication, ServletContextListener {
             response.header("Access-Control-Request-Method", "GET, POST");
             response.header("Access-Control-Allow-Headers", "*");
         });
+        post("/api/login", AuthController::login);
+        post("/api/register", AuthController::register);
+        post("/api/heartbeat", AuthController::heartbeat);
         after((request, response) -> {
             System.out.println("Request to: " + request.url());
         });
