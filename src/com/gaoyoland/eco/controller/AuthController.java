@@ -25,7 +25,13 @@ public class AuthController {
             if (mapping != null) {
                 if (BCrypt.checkpw(request.queryParams("password"), mapping.hash)) {
                     String genToken = RandomStringUtils.randomAlphanumeric(15);
-                    mapping.tokens = mapping.tokens + ";" + genToken;
+
+                    String useString = "";
+                    if(mapping.tokens != null && !mapping.tokens.equals("null")){
+                        useString = mapping.tokens;
+                    }
+                    mapping.tokens = useString + genToken + ";";
+
                     session.update(mapping);
                     tx.commit();
                     return "{ \"token\" : \"" + genToken + "\"}";
