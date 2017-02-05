@@ -17,4 +17,6 @@ public class UserMapping {
     public String tokens;
     @Column(name = "permissionLevel", length=10)
     public String permissionLevel;
+    @Column(name = "cars")
+    public String cars;
 }

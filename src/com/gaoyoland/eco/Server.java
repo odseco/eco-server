@@ -1,6 +1,7 @@
 package com.gaoyoland.eco;
 
 import com.gaoyoland.eco.controller.AuthController;
+import com.gaoyoland.eco.controller.DataController;
 import com.gaoyoland.eco.util.UserUtil;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -46,6 +47,7 @@ public class Server implements SparkApplication, ServletContextListener {
         post("/api/login", AuthController::login);
         post("/api/register", AuthController::register);
         post("/api/heartbeat", AuthController::heartbeat);
+        post("/api/upload", DataController::uploadData);
         after((request, response) -> {
             System.out.println("Request to: " + request.url());
         });
@@ -57,13 +59,13 @@ public class Server implements SparkApplication, ServletContextListener {
                 URL = PRODUCTION_URL;
                 factory = new Configuration().
                         configure("resources/hibernate-production.cfg.xml").
-                        addPackage("com.ionnews.server.mapping").
+                        addPackage("com.gaoyoland.eco.mapping").
                         buildSessionFactory();
             }else{
                 URL = TEST_URL;
                 factory = new Configuration().
                         configure("resources/hibernate.cfg.xml").
-                        addPackage("com.ionnews.server.mapping").
+                        addPackage("com.gaoyoland.eco.mapping").
                         buildSessionFactory();
             }
         }catch (Throwable ex) {
