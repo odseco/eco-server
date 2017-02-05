@@ -4,8 +4,8 @@ import javax.persistence.*;
 import java.util.LinkedHashMap;
 
 @Entity
-@Table(name="dailyData")
-public class DailyDataMapping {
+@Table(name="carData")
+public class CarDataMapping {
 
     @Id
     @Column(name = "carId")
@@ -14,9 +14,9 @@ public class DailyDataMapping {
     @Lob
     public LinkedHashMap<Long, LinkedHashMap<String, String>> data;
 
-    public DailyDataMapping(String carId, LinkedHashMap<Long, LinkedHashMap<String, String>> data) {
+    public CarDataMapping(String carId, LinkedHashMap<Long, LinkedHashMap<String, String>> data) {
         this.carId = carId;
         this.data = data;
     }
-    public DailyDataMapping() {}
+    public CarDataMapping() {}
 }

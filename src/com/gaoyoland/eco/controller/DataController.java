@@ -2,7 +2,7 @@ package com.gaoyoland.eco.controller;
 
 
 import com.gaoyoland.eco.Server;
-import com.gaoyoland.eco.mapping.DailyDataMapping;
+import com.gaoyoland.eco.mapping.CarDataMapping;
 import com.gaoyoland.eco.util.ValidityCheck;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -25,10 +25,10 @@ public class DataController {
         Transaction tx = null;
         try{
             tx = session.beginTransaction();
-            List<DailyDataMapping> mapping = session.createQuery("FROM DailyDataMapping D WHERE D.carId = '" + car + "'", DailyDataMapping.class).list();
-            DailyDataMapping dailyData;
+            List<CarDataMapping> mapping = session.createQuery("FROM CarDataMapping D WHERE D.carId = '" + car + "'", CarDataMapping.class).list();
+            CarDataMapping dailyData;
             if(mapping.size() == 0){
-                dailyData = new DailyDataMapping(car, new LinkedHashMap<>());
+                dailyData = new CarDataMapping(car, new LinkedHashMap<>());
             } else {
                 dailyData = mapping.get(0);
             }
