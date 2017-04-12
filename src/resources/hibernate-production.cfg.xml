@@ -13,8 +13,7 @@
         <property name="connection.password">cryptolocker</property>
         <property name="connection.driver_class">com.mysql.jdbc.Driver</property>
 
-        <mapping class="com.gaoyoland.eco.mapping.UserMapping"/>
-        <mapping class="com.gaoyoland.eco.mapping.CarDataMapping"/>
+        <mapping class="com.gaoyoland.eco.mapping.ResultMapping"/>
 
     </session-factory>
 

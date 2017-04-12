@@ -1,8 +1,6 @@
 package com.gaoyoland.eco;
 
-import com.gaoyoland.eco.controller.AuthController;
-import com.gaoyoland.eco.controller.DataController;
-import com.gaoyoland.eco.util.UserUtil;
+import com.gaoyoland.eco.controller.AnalyzeController;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import spark.route.RouteOverview;
@@ -35,19 +33,11 @@ public class Server implements SparkApplication, ServletContextListener {
         port(8080);
         RouteOverview.enableRouteOverview("/api/debug");
         before((request, response) -> {
-            if(!(request.url().endsWith("/api/login") || request.url().endsWith("/api/register") || request.url().endsWith("/api/heartbeat") || request.url().endsWith("/api/debug"))){
-                if(!UserUtil.isTokenValid(request.queryParams("email"), request.queryParams("token"))){
-                    halt(401, "Your email/token combination is invalid");
-                }
-            }
             response.header("Access-Control-Allow-Origin", "*");
             response.header("Access-Control-Request-Method", "GET, POST");
             response.header("Access-Control-Allow-Headers", "*");
         });
-        post("/api/login", AuthController::login);
-        post("/api/register", AuthController::register);
-        post("/api/heartbeat", AuthController::heartbeat);
-        post("/api/upload", DataController::uploadData);
+        post("/api/calculate", AnalyzeController::analyze);
         after((request, response) -> {
             System.out.println("Request to: " + request.url());
         });
