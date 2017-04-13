@@ -6,9 +6,17 @@ import spark.Request;
 import spark.Response;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AnalyzeController {
+
+    public static double REGULAR_GASOLINE;
+    public static double MIDGRADE_GASOLINE;
+    public static double PREMIUM_GASOLINE;
+    public static double E85;
+    public static double NATURAL_GAS;
 
     public static String analyze(Request request, Response response){
         Gson gson = new Gson();
@@ -19,15 +27,28 @@ public class AnalyzeController {
             //TODO Remove them
         }
 
+        double costOfFuel = REGULAR_GASOLINE;
+        if(trip.car.name.contains("Midgrade")){
+            costOfFuel = MIDGRADE_GASOLINE;
+        }else if(trip.car.name.contains("Premium")){
+            costOfFuel = PREMIUM_GASOLINE;
+        }else if(trip.car.name.contains("E85")){
+            costOfFuel = E85;
+        }else if(trip.car.name.contains("Natural Gas")){
+            costOfFuel = NATURAL_GAS;
+        }
+
+
         int ecoScore = 0;
+        double averageMpg = 0;
         //Do the obvious ECO score calculation
         {
             double[] data = convert(trip.pids.get("_MPG").data);
-            double averageMpg = StatUtils.mean(data);
+            averageMpg = StatUtils.mean(data);
             ecoScore = (int) (averageMpg / trip.car.combinedMpg);
         }
 
-        ArrayList<Analysis.TimeRange> idleTimes = new ArrayList<>();
+        List<Analysis.TimeRange> idleTimes = new ArrayList<>();
         double idleTimeTotal = 0;
         //Do the idle time calculation
         {
@@ -45,8 +66,9 @@ public class AnalyzeController {
                 idleTimeTotal += (idleTime.length / 1000D);
             }
         }
+        double idleTimeCostLost = 0.01D * costOfFuel * (idleTimeTotal / 60D);
 
-        ArrayList<Analysis.TimeRange> overspeedTimes = new ArrayList<>();
+        List<Analysis.TimeRange> overspeedTimes = new ArrayList<>();
         double averageOverspeed = 0;
         //Overspeed calculation
         {
@@ -72,24 +94,70 @@ public class AnalyzeController {
             }
             averageOverspeed /= (double) overspeedTimes.size();
         }
+        double overSpeedCostLost = ((0.07D * costOfFuel) / 5D) * (averageOverspeed - 50);
 
+        List<Analysis.TimeRange> suddenAccelerationTimes = new ArrayList<>();
+        //Sudden acceleration calculation
+        {
+            ArrayList<Integer> labeled = new ArrayList<>();
+            long[] timestamps = trip.pids.get("010D").timestamp;
+            double[] data = convert(trip.pids.get("010D").data);
 
+            for(int i = 0; i < data.length - 1; i++){
+                if(data[i] < data[i+1]){
+                    if(!labeled.contains(i)){
+                        labeled.add(i);
+                    }
+                    labeled.add(i + 1);
+                }
+            }
+            suddenAccelerationTimes = findTimeRanges(labeled, timestamps, data);
+            for(Analysis.TimeRange timerange: suddenAccelerationTimes){
+                double[] metersPerSecond = new double[timerange.data.length];
+                if(trip.isImperial){
+                    for(int i = 0; i < timerange.data.length; i++){
+                        metersPerSecond[i] = timerange.data[i] * 0.44704D;
+                    }
+                }else{
+                    for(int i = 0; i < timerange.data.length; i++){
+                        metersPerSecond[i] = timerange.data[i] / 3.6D;
+                    }
+                }
+
+                double startingVelocity = metersPerSecond[0];
+                double endingVelocity = metersPerSecond[metersPerSecond.length - 1];
+                double time = (timerange.endTime - timerange.startTime) / 1000D;
+                double avgAcceleration = (endingVelocity - startingVelocity) / time;
+
+                if(avgAcceleration < 6){
+                    suddenAccelerationTimes.remove(timerange);
+                }
+
+            }
+        }
 
         Analysis analysis = new Analysis();
         analysis.ecoScore = ecoScore;
+        analysis.averageMpg = round(averageMpg);
         analysis.idleTimes = idleTimes;
-        analysis.idleTimeTotal = (int) idleTimeTotal;
-        analysis.overspeedTimes = overspeedTimes;
-        analysis.averageOverspeed = (int) averageOverspeed;
+        analysis.idleTimeTotal = round(idleTimeTotal);
+        analysis.overSpeedTimes = overspeedTimes;
+        analysis.averageOverSpeed = round(averageOverspeed);
+        analysis.idleCostLost = round(idleTimeCostLost);
+        analysis.overSpeedCostLost = round(overSpeedCostLost);
 
         System.out.println(gson.toJson(analysis));
 
         return gson.toJson(analysis);
     }
 
+    private static double round(double r){
+        return  (double) Math.round(r * 100) / 100;
+    }
 
-    private static ArrayList<Analysis.TimeRange> findTimeRanges(ArrayList<Integer> labeled, long[] timestamps, double[] data){
-        ArrayList<Analysis.TimeRange> ranges = new ArrayList<Analysis.TimeRange>();
+
+    private static List<Analysis.TimeRange> findTimeRanges(ArrayList<Integer> labeled, long[] timestamps, double[] data){
+        CopyOnWriteArrayList<Analysis.TimeRange> ranges = new CopyOnWriteArrayList<Analysis.TimeRange>();
         long startTime = 0;
         long endTime = 0;
         long elapsedTime = 0;
@@ -142,10 +210,16 @@ public class AnalyzeController {
         }
 
         public int ecoScore;
-        public ArrayList<TimeRange> idleTimes;
-        public int idleTimeTotal;
-        public ArrayList<TimeRange> overspeedTimes;
-        public int averageOverspeed;
+        public double averageMpg;
+
+        public List<TimeRange> idleTimes;
+        public double idleTimeTotal;
+
+        public List<TimeRange> overSpeedTimes;
+        public double averageOverSpeed;
+
+        public double idleCostLost;
+        public double overSpeedCostLost;
 
     }
 
