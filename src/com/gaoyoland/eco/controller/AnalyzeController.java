@@ -72,7 +72,8 @@ public class AnalyzeController {
                 idleTimeTotal += (idleTime.length / 1000D);
             }
         }
-        double idleTimeCostLost = 0.01D * costOfFuel * (idleTimeTotal / 60D);
+        idleTimeTotal = idleTimeTotal / 60D;
+        double idleTimeCostLost = 0.01D * costOfFuel * idleTimeTotal;
 
         List<Analysis.TimeRange> overspeedTimes = new ArrayList<>();
         double averageOverspeed = 0;
@@ -157,7 +158,7 @@ public class AnalyzeController {
         try {
             tx = session.beginTransaction();
             ResultMapping result = new ResultMapping();
-            result.id = RandomStringUtils.random(10, true, true);
+            result.id = RandomStringUtils.random(15, true, true);
             result.analysis = gson.toJson(analysis);
 
             analysis.token = result.id;

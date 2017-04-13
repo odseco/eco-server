@@ -14,6 +14,7 @@
         <property name="connection.driver_class">com.mysql.jdbc.Driver</property>
 
         <mapping class="com.gaoyoland.eco.mapping.ResultMapping"/>
+        <mapping class="com.gaoyoland.eco.mapping.LeaderboardMapping"/>
 
     </session-factory>
 

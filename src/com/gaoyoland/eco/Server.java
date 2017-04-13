@@ -1,6 +1,7 @@
 package com.gaoyoland.eco;
 
 import com.gaoyoland.eco.controller.AnalyzeController;
+import com.gaoyoland.eco.controller.LeaderboardController;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.w3c.dom.Document;
@@ -9,6 +10,7 @@ import spark.servlet.SparkApplication;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.BufferedInputStream;
@@ -18,6 +20,7 @@ import java.net.URLConnection;
 
 import static spark.Spark.*;
 
+@WebListener
 public class Server implements SparkApplication, ServletContextListener {
 
     public static boolean PRODUCTION = false;
@@ -45,6 +48,7 @@ public class Server implements SparkApplication, ServletContextListener {
             response.header("Access-Control-Allow-Headers", "*");
         });
         post("/api/calculate", AnalyzeController::analyze);
+        post("/api/joinBoard", LeaderboardController::joinBoard);
         after((request, response) -> {
             System.out.println("Request to: " + request.url());
         });
