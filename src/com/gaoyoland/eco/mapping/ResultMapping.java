@@ -9,6 +9,6 @@ public class ResultMapping {
     @Id
     @Column(name = "id")
     public String id;
-    @Column(name = "score")
-    public int score;
+    @Column(name = "analysis", columnDefinition="TEXT")
+    public String analysis;
 }

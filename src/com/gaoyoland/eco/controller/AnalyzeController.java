@@ -1,7 +1,13 @@
 package com.gaoyoland.eco.controller;
 
+import com.gaoyoland.eco.Server;
+import com.gaoyoland.eco.mapping.ResultMapping;
 import com.google.gson.Gson;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.math3.stat.StatUtils;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import spark.Request;
 import spark.Response;
 
@@ -146,6 +152,24 @@ public class AnalyzeController {
         analysis.idleCostLost = round(idleTimeCostLost);
         analysis.overSpeedCostLost = round(overSpeedCostLost);
 
+        Session session = Server.factory.openSession();
+        Transaction tx = null;
+        try {
+            tx = session.beginTransaction();
+            ResultMapping result = new ResultMapping();
+            result.id = RandomStringUtils.random(10, true, true);
+            result.analysis = gson.toJson(analysis);
+
+            analysis.token = result.id;
+            session.save(result);
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) tx.rollback();
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+
         return gson.toJson(analysis);
     }
 
@@ -219,6 +243,7 @@ public class AnalyzeController {
         public double idleCostLost;
         public double overSpeedCostLost;
 
+        public String token;
     }
 
 
