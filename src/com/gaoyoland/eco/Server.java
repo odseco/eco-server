@@ -49,6 +49,8 @@ public class Server implements SparkApplication, ServletContextListener {
         });
         post("/api/calculate", AnalyzeController::analyze);
         post("/api/joinBoard", LeaderboardController::joinBoard);
+        post("/api/updateBoard", LeaderboardController::updateBoard);
+
         after((request, response) -> {
             System.out.println("Request to: " + request.url());
         });

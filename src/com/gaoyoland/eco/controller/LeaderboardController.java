@@ -11,16 +11,71 @@ import spark.Request;
 import spark.Response;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class LeaderboardController {
 
 
+    public static String updateBoard(Request request, Response response){
+        ValidityCheck.check(request, response, "id", "boardId", "password", "tokens");
+
+        String boardId = request.queryParams("boardId");
+        String password = request.queryParams("password");
+        String id = request.queryParams("id");
+        String[] tokens = request.queryParams("tokens").split(",");
+
+
+        Session session = Server.factory.openSession();
+        Transaction tx = null;
+        try {
+            tx = session.beginTransaction();
+            List<LeaderboardMapping> leaderboardList = session.createQuery("FROM LeaderboardMapping B WHERE B.id = '" + boardId + "'", LeaderboardMapping.class).list();
+            if(leaderboardList.size() == 0){
+                //No board exists by this id
+                return "{\"message\" : \"This leaderboard does not exist\"}";
+            }else{
+                LeaderboardMapping leaderboard = leaderboardList.get(0);
+                if(leaderboard.password.equals(password)){
+                    //Here goes your own logic
+                    Gson gson = new Gson();
+                    UserData data = gson.fromJson(leaderboard.userData, UserData.class);
+                    UserData.User currentUser = null;
+                    for(UserData.User user: data.users){
+                        if(user.id == Integer.parseInt(id)){
+                            currentUser = user;
+                        }
+                    }
+
+                    if(currentUser != null){
+                        currentUser.tokens = Arrays.asList(tokens);
+                        leaderboard.userData = gson.toJson(data);
+                        session.update(leaderboard);
+                        tx.commit();
+                        return "{\"message\" : \"Board updated successfully\"}";
+                    }else{
+                        return "{\"message\" : \"User does not exist\"}";
+                    }
+                }else{
+                    //password incorrect
+                    return "{\"message\" : \"Incorrect leaderboard password\"}";
+                }
+            }
+        } catch (Exception e) {
+            if (tx != null) tx.rollback();
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+
+        return "{\"message\" : \"Invalid request made to server\"}";
+    }
+
 
     public static String joinBoard(Request request, Response response){
-        ValidityCheck.check(request, response, "id", "password", "name");
+        ValidityCheck.check(request, response, "boardId", "password", "name");
 
-        String id = request.queryParams("id");
+        String boardId = request.queryParams("boardId");
         String password = request.queryParams("password");
         String name = request.queryParams("name");
 
@@ -28,7 +83,7 @@ public class LeaderboardController {
         Transaction tx = null;
         try {
             tx = session.beginTransaction();
-            List<LeaderboardMapping> leaderboardList = session.createQuery("FROM LeaderboardMapping B WHERE B.id = '" + id + "'", LeaderboardMapping.class).list();
+            List<LeaderboardMapping> leaderboardList = session.createQuery("FROM LeaderboardMapping B WHERE B.id = '" + boardId + "'", LeaderboardMapping.class).list();
             if(leaderboardList.size() == 0){
                 //No board exists by this id
                 return "{\"message\" : \"This leaderboard does not exist\"}";
@@ -50,7 +105,7 @@ public class LeaderboardController {
                     leaderboard.userData = gson.toJson(data);
                     session.update(leaderboard);
                     tx.commit();
-                    return "{\"message\" : \"Joined leaderboard successfully\"}";
+                    return "{\"message\" : \"Joined leaderboard successfully\", \"id\" : " + user.id + "}";
                 }else{
                     //password incorrect
                     return "{\"message\" : \"Incorrect leaderboard password\"}";
@@ -73,7 +128,7 @@ public class LeaderboardController {
         private static class User{
             public int id;
             public String name;
-            public ArrayList<String> tokens;
+            public List<String> tokens;
         }
 
     }
