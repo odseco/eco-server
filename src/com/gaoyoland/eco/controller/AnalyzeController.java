@@ -45,7 +45,7 @@ public class AnalyzeController {
         {
             double[] data = convert(trip.pids.get("_MPG").data);
             averageMpg = StatUtils.mean(data);
-            ecoScore = (int) (averageMpg / trip.car.combinedMpg);
+            ecoScore = (int) ((averageMpg / trip.car.combinedMpg) * 100D);
         }
 
         List<Analysis.TimeRange> idleTimes = new ArrayList<>();
@@ -145,8 +145,6 @@ public class AnalyzeController {
         analysis.averageOverSpeed = round(averageOverspeed);
         analysis.idleCostLost = round(idleTimeCostLost);
         analysis.overSpeedCostLost = round(overSpeedCostLost);
-
-        System.out.println(gson.toJson(analysis));
 
         return gson.toJson(analysis);
     }
