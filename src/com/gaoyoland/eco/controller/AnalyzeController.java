@@ -217,8 +217,8 @@ public class AnalyzeController {
         return data;
     }
 
-    private static class Analysis{
-        private static class TimeRange{
+     static class Analysis{
+         static class TimeRange{
             public long startTime;
             public long endTime;
             public long length;
