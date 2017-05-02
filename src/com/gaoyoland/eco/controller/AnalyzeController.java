@@ -152,6 +152,7 @@ public class AnalyzeController {
         analysis.averageOverSpeed = round(averageOverspeed);
         analysis.idleCostLost = round(idleTimeCostLost);
         analysis.overSpeedCostLost = round(overSpeedCostLost);
+        analysis.co2 = round(trip.distance * trip.car.co2);
 
         Session session = Server.factory.openSession();
         Transaction tx = null;
@@ -245,7 +246,8 @@ public class AnalyzeController {
         public double overSpeedCostLost;
 
         public String token;
-    }
+        public double co2;
+     }
 
 
 
